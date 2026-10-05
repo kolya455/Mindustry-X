@@ -37,13 +37,23 @@ jobs:
           cd ${{ github.workspace }}
           git clone https://github.com/Berstanio/MetalANGLEKit.git
           cd MetalANGLEKit
+          # Инициализируем ТОЛЬКО angle и depot_tools — остальное скрипт сам подтянет
+          git submodule update --init angle depot_tools
           ls -la
+          ls -la angle/ | head -20
+
+      - name: Setup ANGLE
+        run: |
+          export PATH="$HOME/depot_tools:$PATH"
+          cd ${{ github.workspace }}/MetalANGLEKit
+          chmod +x *.sh 2>/dev/null || true
+          ./setup-angle.sh
+        timeout-minutes: 60
 
       - name: Build MetalANGLEKit
         run: |
           export PATH="$HOME/depot_tools:$PATH"
           cd ${{ github.workspace }}/MetalANGLEKit
-          chmod +x *.sh 2>/dev/null || true
           ./build-angle.sh Release
         timeout-minutes: 90
 
@@ -55,8 +65,8 @@ jobs:
 
           if [ -z "$XCFW" ]; then
             echo "==> Не найден. Все framework/xcframework:"
-            find ${{ github.workspace }}/MetalANGLEKit -name "*.framework" -type d
-            find ${{ github.workspace }}/MetalANGLEKit -name "*.xcframework" -type d
+            find ${{ github.workspace }}/MetalANGLEKit -name "*.framework" -type d | head -20
+            find ${{ github.workspace }}/MetalANGLEKit -name "*.xcframework" -type d | head -20
             exit 1
           fi
 
