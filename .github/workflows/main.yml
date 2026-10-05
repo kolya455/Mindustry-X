@@ -8,24 +8,34 @@ jobs:
     runs-on: macos-14
 
     steps:
-      - name: Checkout code
+      - name: Checkout Mindustry
         uses: actions/checkout@v4
+        with:
+          path: Mindustry-X
 
-      - name: Set up JDK 17
+      - name: Checkout Arc (рядом с Mindustry)
+        uses: actions/checkout@v4
+        with:
+          repository: Anuken/Arc
+          path: Arc
+
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Grant execute permission for gradlew
+        working-directory: Mindustry-X
         run: chmod +x ./gradlew
 
       - name: Build IPA
+        working-directory: Mindustry-X
         run: ./gradlew createIpa --stacktrace
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: mindustry-ios-ipa
-          path: ios/build/robovm/*.ipa
+          path: Mindustry-X/ios/build/robovm/*.ipa
           if-no-files-found: error
