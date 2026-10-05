@@ -25,12 +25,17 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Find MetalANGLEKit
+        run: |
+          find /Users/runner -name "MetalANGLEKit.xcframework" -type d 2>/dev/null | head -20
+          find /Users/runner -name "*.xcframework" -path "*ios*" 2>/dev/null | head -20
+
       - name: Copy Native Libraries
         run: |
           mkdir -p Mindustry-X/ios/libs
-          cp -v Arc/natives/natives-freetype-ios/libs/libarc-freetype.a Mindustry-X/ios/libs/
-          # Если есть другие нативные библиотеки, скопируй и их, например:
-          # cp -v Arc/natives/natives-ios/libs/libarc.a Mindustry-X/ios/libs/
+          cp -v Arc/natives/natives-freetype-ios/libs/libarc-freetype.a Mindustry-X/ios/libs/ || true
+          # Если найдёшь MetalANGLEKit.xcframework, добавь копирование:
+          # cp -Rv /путь/к/MetalANGLEKit.xcframework Mindustry-X/ios/libs/
 
       - name: Grant execute permission for gradlew
         working-directory: Mindustry-X
