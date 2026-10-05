@@ -182,3 +182,25 @@ build/
 *.ipa
 *.tar.gz
 *.jar
+
+
+# Кеши и сборки
+build/
+.gradle/
+*.ipa
+*.tar.gz
+*.jar
+.gradletasknamecache
+
+# Локальные SDK и dyld cache
+dyld_cache/
+robovm-sdk/
+robovm-sdk-builder/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Логи
+*.log

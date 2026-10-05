@@ -1,0 +1,7 @@
+name: "double-turret-range"
+displayName: "Turret Range x2"
+author: "you"
+description: "Multiplies range of all turrets by 2x."
+version: "1.0.0"
+minGameVersion: 157
+hidden: false

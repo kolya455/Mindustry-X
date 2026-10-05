@@ -1,6 +1,9 @@
 buildscript{
     repositories{
-        mavenCentral()
+    	mavenLocal()
+    	maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' }  // зеркало Google
+    	maven { url 'https://mirror.yandex.ru/maven/central/' }  // зеркало Яндекса
+    	maven { url 'https://repo.repsy.io/mvn/dkimitsa/alt' }
     }
 
     dependencies{
@@ -18,7 +21,7 @@ task incrementConfig{
     if(vfile.exists()){
         props.load(new FileInputStream(vfile))
     }else{
-        props['app.id'] = 'io.anuke.mindustry'
+        props['app.id'] = 'io.kolya455.mindustryx'
         props['app.version'] = '7.0'
         props['app.mainclass'] = 'mindustry.ios.IOSLauncher'
         props['app.executable'] = 'IOSLauncher'
@@ -90,5 +93,5 @@ robovm{
 
     iosSignIdentity = project.properties["signIdentity"]
     iosProvisioningProfile = project.properties["provisioningProfile"]
-    iosSkipSigning = false
+    iosSkipSigning = true
 }

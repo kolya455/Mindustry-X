@@ -59,7 +59,7 @@ android{
         Integer vcode = props['androidBuildCode']?.toInteger() ?: 1
         def versionNameResult = "$versionNumber-$versionType-${getBuildVersion().replace(" ", "-")}"
 
-        applicationId "io.anuke.mindustry"
+        applicationId "io.kolya455.mindustry_x"
         minSdkVersion 14
         targetSdkVersion 36
 
