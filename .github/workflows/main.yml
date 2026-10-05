@@ -25,45 +25,46 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Download MetalANGLEKit
+      - name: Install depot_tools
         run: |
-          set -e
+          git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git $HOME/depot_tools
+          echo "$HOME/depot_tools" >> $GITHUB_PATH
+          export PATH="$HOME/depot_tools:$PATH"
+          # Инициализация (скачает autoninja, gn, ninja и др.)
+          autoninja --version || true
+          gclient --version || true
 
-          echo "==> Ищу релизы MetalANGLEKit"
-          API="https://api.github.com/repos/Berstanio/MetalANGLEKit/releases"
-          RELEASE_JSON=$(curl -sL "$API")
+      - name: Clone MetalANGLEKit
+        run: |
+          cd ${{ github.workspace }}
+          git clone --recursive https://github.com/Berstanio/MetalANGLEKit.git
+          cd MetalANGLEKit
+          ls -la
+          echo "==> build-angle.sh:"
+          cat build-angle.sh 2>/dev/null || echo "нет build-angle.sh"
+          echo "==> angle directory:"
+          ls -la angle/ 2>/dev/null | head -20 || echo "нет angle/"
 
-          echo "$RELEASE_JSON" | grep -E '"tag_name"|"browser_download_url"' | head -40 || true
+      - name: Build MetalANGLEKit
+        run: |
+          export PATH="$HOME/depot_tools:$PATH"
+          cd ${{ github.workspace }}/MetalANGLEKit
+          chmod +x *.sh 2>/dev/null || true
+          ./build-angle.sh
+        timeout-minutes: 90
 
-          ASSET_URLS=$(echo "$RELEASE_JSON" | grep '"browser_download_url"' | grep -oE 'https://[^"]+' | head -10 || true)
-
-          mkdir -p /tmp/mak
-          cd /tmp/mak
-
-          for URL in $ASSET_URLS; do
-            echo "==> Пробую $URL"
-            FILENAME=$(basename "$URL")
-            if curl -sL -o "$FILENAME" "$URL"; then
-              echo "Скачал $FILENAME ($(du -h "$FILENAME" | cut -f1))"
-              if [[ "$FILENAME" == *.zip ]]; then
-                unzip -q -o "$FILENAME" -d "extracted_${FILENAME%.zip}" || true
-              fi
-            fi
-          done
-
-          echo "==> Ищу MetalANGLEKit.framework"
-          find . -name "MetalANGLEKit.framework" -type d || true
-          find . -name "MetalANGLEKit.xcframework" -type d || true
-
-          FRAMEWORK=$(find . -name "MetalANGLEKit.framework" -type d | head -1)
+      - name: Copy MetalANGLEKit
+        run: |
+          find ${{ github.workspace }}/MetalANGLEKit -name "MetalANGLEKit.framework" -type d
+          FRAMEWORK=$(find ${{ github.workspace }}/MetalANGLEKit -name "MetalANGLEKit.framework" -type d | head -1)
           if [ -z "$FRAMEWORK" ]; then
-            echo "❌ MetalANGLEKit.framework не найден в релизах"
+            echo "❌ MetalANGLEKit.framework не собран"
+            echo "==> Ищу любые .framework:"
+            find ${{ github.workspace }}/MetalANGLEKit -name "*.framework" -type d
             exit 1
           fi
-
           mkdir -p ${{ github.workspace }}/Mindustry-X/ios/libs
           cp -Rv "$FRAMEWORK" ${{ github.workspace }}/Mindustry-X/ios/libs/
-          echo "[+] MetalANGLEKit скопирован в ios/libs"
 
       - name: Copy Native Libraries
         run: |
