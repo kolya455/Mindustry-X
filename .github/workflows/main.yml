@@ -25,37 +25,45 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Download prebuilt MetalANGLEKit
+      - name: Download MetalANGLEKit
         run: |
           set -e
-          mkdir -p /tmp/gdx-ios
-          cd /tmp/gdx-ios
 
-          # Пробуем разные версии libGDX — ищем ту, где есть MetalANGLE
-          for V in 1.13.5 1.13.1 1.12.1; do
-            echo "==> Пробую gdx-platform:$V:natives-ios"
-            URL="https://repo1.maven.org/maven2/com/badlogicgames/gdx/gdx-platform/${V}/gdx-platform-${V}-natives-ios.jar"
-            if wget -q --tries=3 --timeout=60 -O gdx.jar "$URL"; then
-              echo "[+] Скачал $V"
-              break
+          echo "==> Ищу релизы MetalANGLEKit"
+          API="https://api.github.com/repos/Berstanio/MetalANGLEKit/releases"
+          RELEASE_JSON=$(curl -sL "$API")
+
+          echo "$RELEASE_JSON" | grep -E '"tag_name"|"browser_download_url"' | head -40 || true
+
+          ASSET_URLS=$(echo "$RELEASE_JSON" | grep '"browser_download_url"' | grep -oE 'https://[^"]+' | head -10 || true)
+
+          mkdir -p /tmp/mak
+          cd /tmp/mak
+
+          for URL in $ASSET_URLS; do
+            echo "==> Пробую $URL"
+            FILENAME=$(basename "$URL")
+            if curl -sL -o "$FILENAME" "$URL"; then
+              echo "Скачал $FILENAME ($(du -h "$FILENAME" | cut -f1))"
+              if [[ "$FILENAME" == *.zip ]]; then
+                unzip -q -o "$FILENAME" -d "extracted_${FILENAME%.zip}" || true
+              fi
             fi
           done
 
-          ls -la
-          unzip -o gdx.jar -d extracted
           echo "==> Ищу MetalANGLEKit.framework"
-          find extracted -name "MetalANGLEKit*" -type d
-          find extracted -name "*.framework" -type d
+          find . -name "MetalANGLEKit.framework" -type d || true
+          find . -name "MetalANGLEKit.xcframework" -type d || true
 
-          mkdir -p ${{ github.workspace }}/Mindustry-X/ios/libs
-          FOUND=$(find extracted -name "MetalANGLEKit.framework" -type d | head -1)
-          if [ -n "$FOUND" ]; then
-            cp -Rv "$FOUND" ${{ github.workspace }}/Mindustry-X/ios/libs/
-            echo "[+] MetalANGLEKit скопирован"
-          else
-            echo "[!] MetalANGLEKit.framework не найден в jar"
+          FRAMEWORK=$(find . -name "MetalANGLEKit.framework" -type d | head -1)
+          if [ -z "$FRAMEWORK" ]; then
+            echo "❌ MetalANGLEKit.framework не найден в релизах"
             exit 1
           fi
+
+          mkdir -p ${{ github.workspace }}/Mindustry-X/ios/libs
+          cp -Rv "$FRAMEWORK" ${{ github.workspace }}/Mindustry-X/ios/libs/
+          echo "[+] MetalANGLEKit скопирован в ios/libs"
 
       - name: Copy Native Libraries
         run: |
