@@ -25,17 +25,22 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Find MetalANGLEKit
+      # Шаг 1: Клонируем и собираем MetalANGLEKit
+      - name: Clone and build MetalANGLEKit
         run: |
-          find /Users/runner -name "MetalANGLEKit.xcframework" -type d 2>/dev/null | head -20
-          find /Users/runner -name "*.xcframework" -path "*ios*" 2>/dev/null | head -20
+          git clone https://github.com/libgdx/MetalANGLEKit.git
+          cd MetalANGLEKit
+          # Собираем фреймворк для arm64 (устройства)
+          xcodebuild -project MetalANGLEKit.xcodeproj -scheme MetalANGLEKit -sdk iphoneos -configuration Release ARCHS=arm64 ONLY_ACTIVE_ARCH=NO
+          # Копируем готовый фреймворк в проект Mindustry
+          mkdir -p ${{ github.workspace }}/Mindustry-X/ios/libs
+          cp -Rv build/Release-iphoneos/MetalANGLEKit.framework ${{ github.workspace }}/Mindustry-X/ios/libs/
 
+      # Шаг 2: Копируем остальные нативные библиотеки
       - name: Copy Native Libraries
         run: |
           mkdir -p Mindustry-X/ios/libs
           cp -v Arc/natives/natives-freetype-ios/libs/libarc-freetype.a Mindustry-X/ios/libs/ || true
-          # Если найдёшь MetalANGLEKit.xcframework, добавь копирование:
-          # cp -Rv /путь/к/MetalANGLEKit.xcframework Mindustry-X/ios/libs/
 
       - name: Grant execute permission for gradlew
         working-directory: Mindustry-X
