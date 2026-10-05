@@ -38,28 +38,36 @@ jobs:
           git clone https://github.com/Berstanio/MetalANGLEKit.git
           cd MetalANGLEKit
           ls -la
-          echo "==> Содержимое build-angle.sh:"
-          cat build-angle.sh 2>/dev/null || echo "build-angle.sh отсутствует"
 
       - name: Build MetalANGLEKit
         run: |
           export PATH="$HOME/depot_tools:$PATH"
           cd ${{ github.workspace }}/MetalANGLEKit
           chmod +x *.sh 2>/dev/null || true
-          ./build-angle.sh
+          ./build-angle.sh Release
         timeout-minutes: 90
 
       - name: Copy MetalANGLEKit
         run: |
-          find ${{ github.workspace }}/MetalANGLEKit -name "MetalANGLEKit.framework" -type d
-          FRAMEWORK=$(find ${{ github.workspace }}/MetalANGLEKit -name "MetalANGLEKit.framework" -type d | head -1)
-          if [ -z "$FRAMEWORK" ]; then
-            echo "❌ MetalANGLEKit.framework не собран"
+          echo "==> Ищу MetalANGLEKit.xcframework"
+          find ${{ github.workspace }}/MetalANGLEKit -name "MetalANGLEKit.xcframework" -type d
+          XCFW=$(find ${{ github.workspace }}/MetalANGLEKit -name "MetalANGLEKit.xcframework" -type d | head -1)
+
+          if [ -z "$XCFW" ]; then
+            echo "==> Не найден. Все framework/xcframework:"
             find ${{ github.workspace }}/MetalANGLEKit -name "*.framework" -type d
+            find ${{ github.workspace }}/MetalANGLEKit -name "*.xcframework" -type d
             exit 1
           fi
+
           mkdir -p ${{ github.workspace }}/Mindustry-X/ios/libs
-          cp -Rv "$FRAMEWORK" ${{ github.workspace }}/Mindustry-X/ios/libs/
+          cp -Rv "$XCFW" ${{ github.workspace }}/Mindustry-X/ios/libs/
+
+          ARM64=$(find "$XCFW" -name "MetalANGLEKit.framework" -type d | grep -v simulator | head -1)
+          if [ -n "$ARM64" ]; then
+            ln -sf "$ARM64" "${{ github.workspace }}/Mindustry-X/ios/libs/MetalANGLEKit.framework"
+            echo "[+] Симлинк создан: MetalANGLEKit.framework → $ARM64"
+          fi
 
       - name: Copy Native Libraries
         run: |
