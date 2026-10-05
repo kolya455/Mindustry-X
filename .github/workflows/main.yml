@@ -30,20 +30,16 @@ jobs:
           git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git $HOME/depot_tools
           echo "$HOME/depot_tools" >> $GITHUB_PATH
           export PATH="$HOME/depot_tools:$PATH"
-          # Инициализация (скачает autoninja, gn, ninja и др.)
-          autoninja --version || true
           gclient --version || true
 
       - name: Clone MetalANGLEKit
         run: |
           cd ${{ github.workspace }}
-          git clone --recursive https://github.com/Berstanio/MetalANGLEKit.git
+          git clone https://github.com/Berstanio/MetalANGLEKit.git
           cd MetalANGLEKit
           ls -la
-          echo "==> build-angle.sh:"
-          cat build-angle.sh 2>/dev/null || echo "нет build-angle.sh"
-          echo "==> angle directory:"
-          ls -la angle/ 2>/dev/null | head -20 || echo "нет angle/"
+          echo "==> Содержимое build-angle.sh:"
+          cat build-angle.sh 2>/dev/null || echo "build-angle.sh отсутствует"
 
       - name: Build MetalANGLEKit
         run: |
@@ -59,7 +55,6 @@ jobs:
           FRAMEWORK=$(find ${{ github.workspace }}/MetalANGLEKit -name "MetalANGLEKit.framework" -type d | head -1)
           if [ -z "$FRAMEWORK" ]; then
             echo "❌ MetalANGLEKit.framework не собран"
-            echo "==> Ищу любые .framework:"
             find ${{ github.workspace }}/MetalANGLEKit -name "*.framework" -type d
             exit 1
           fi
