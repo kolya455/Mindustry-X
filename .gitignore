@@ -171,3 +171,14 @@ core/assets/logicids.dat
 
 # project files for the sectors
 core/assets-raw/sprites/ui/sectors/*.json
+
+# iOS and desktop
+
+dyld_cache/
+robovm-sdk/
+robovm-sdk-builder/
+build/
+.gradle/
+*.ipa
+*.tar.gz
+*.jar
